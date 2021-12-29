@@ -52,22 +52,22 @@ contract Mimon is Context, ERC721, ERC721Enumerable, AccessControlEnumerable, Ow
 	function massTransferFrom(
 		address from,
 		address to,
-		uint256[] memory _myTokensId
+		uint256[] memory tokenIds
 	) public {
-		require(_myTokensId.length <= 100, "Can only transfer 100 Mimons at a time");
-		for (uint256 i = 0; i < _myTokensId.length; i++) {
-			transferFrom(from, to, _myTokensId[i]);
+		require(tokenIds.length <= 100, "Can only max transfer 100 Mimons at a time");
+		for (uint256 i = 0; i < tokenIds.length; i++) {
+			transferFrom(from, to, tokenIds[i]);
 		}
 	}
 
 	function multiTransferFrom(
 		address from,
 		address[] memory to,
-		uint256[] memory tokenId
+		uint256[] memory tokenIds
 	) public {
-		for (uint256 i = 0; i < to.length; i++) {
-			address reciever = to[i];
-			transferFrom(from, reciever, tokenId[i]);
+		require(tokenIds.length <= 100, "Can only max transfer 100 Mimons at a time");
+		for (uint256 i = 0; i < tokenIds.length; i++) {
+			transferFrom(from, to[i], tokenIds[i]);
 		}
 	}
 
