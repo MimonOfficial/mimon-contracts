@@ -10,34 +10,40 @@ contract MimonSale is Context {
 	using SafeMath for uint256;
 
 	IMimon public MimonContract;
-	uint16 MAX_MIMON_SUPPLY = 10000;
 	uint256 PRESALE_PRICE = 40000000000000000; // 0.04 Eth
 	uint256 PUBLICSALE_PRICE = 60000000000000000; // 0.06 Eth
-	uint256 public constant maxClonePurchase = 15;
-	bool public isSale = false;
+	uint256 MAX_TOKEN_SUPPLY = 10000;
+	uint256 public constant MAX_PRESALE_AMOUNT = 3;
+	uint256 public constant MAX_PUBLICSALE_AMOUNT = 15;
+	bool public isPreSale = false;
+	bool public isPublicSale = false;
 	address public C1;
 	address public C2;
 
+	mapping (address => uint256) public preSaleCount;
+
 	modifier preSaleRole(uint256 numberOfTokens) {
-		require(isSale, "The sale has not started.");
-		require(MimonContract.totalSupply() < MAX_MIMON_SUPPLY, "Sale has already ended.");
-		require(numberOfTokens <= maxClonePurchase, "Can only mint 15 Clones at a time");
-		require(MimonContract.totalSupply().add(numberOfTokens) <= MAX_MIMON_SUPPLY, "Purchase would exceed max supply of Mimon");
+		require(isPreSale, "The sale has not started.");
+		require(MimonContract.totalSupply() < MAX_TOKEN_SUPPLY, "Sale has already ended.");
+		require(MimonContract.totalSupply().add(numberOfTokens) <= MAX_TOKEN_SUPPLY, "Purchase would exceed max supply of Mimon");
+		require(numberOfTokens <= MAX_PRESALE_AMOUNT, "Can only mint 3 Mimon at a time");
+		require(preSaleCount[_msgSender()] < MAX_PRESALE_AMOUNT, "Pre-sale max mint amount is 3");
+		require(preSaleCount[_msgSender()].add(numberOfTokens) <= MAX_PRESALE_AMOUNT, "Pre-sale max mint amount is 3");
 		require(PRESALE_PRICE.mul(numberOfTokens) <= msg.value, "Eth value sent is not correct");
 		_;
 	}
 
 	modifier publicSaleRole(uint256 numberOfTokens) {
-		require(isSale, "The sale has not started.");
-		require(MimonContract.totalSupply() < MAX_MIMON_SUPPLY, "Sale has already ended.");
-		require(numberOfTokens <= maxClonePurchase, "Can only mint 15 Clones at a time");
-		require(MimonContract.totalSupply().add(numberOfTokens) <= MAX_MIMON_SUPPLY, "Purchase would exceed max supply of Mimon");
+		require(isPublicSale, "The sale has not started.");
+		require(MimonContract.totalSupply() < MAX_TOKEN_SUPPLY, "Sale has already ended.");
+		require(MimonContract.totalSupply().add(numberOfTokens) <= MAX_TOKEN_SUPPLY, "Purchase would exceed max supply of Mimon");
+		require(numberOfTokens <= MAX_PUBLICSALE_AMOUNT, "Can only mint 3 Mimon at a time");
 		require(PUBLICSALE_PRICE.mul(numberOfTokens) <= msg.value, "Eth value sent is not correct");
 		_;
 	}
 
 	/*
-    C1: Director, C2: Artist, C3: Developer
+    C1: Team, C2: Dev
   */
 	modifier onlyCreator() {
 		require(C1 == _msgSender() || C2 == _msgSender(), "onlyCreator: caller is not the creator");
@@ -66,7 +72,7 @@ contract MimonSale is Context {
 
 	function preSale(uint256 numberOfTokens) public payable preSaleRole(numberOfTokens) {
 		for (uint256 i = 0; i < numberOfTokens; i++) {
-			if (MimonContract.totalSupply() < MAX_MIMON_SUPPLY) {
+			if (MimonContract.totalSupply() < MAX_TOKEN_SUPPLY) {
 				MimonContract.mint(_msgSender());
 			}
 		}
@@ -74,16 +80,15 @@ contract MimonSale is Context {
 
 	function publicSale(uint256 numberOfTokens) public payable publicSaleRole(numberOfTokens) {
 		for (uint256 i = 0; i < numberOfTokens; i++) {
-			if (MimonContract.totalSupply() < MAX_MIMON_SUPPLY) {
+			if (MimonContract.totalSupply() < MAX_TOKEN_SUPPLY) {
 				MimonContract.mint(_msgSender());
 			}
 		}
 	}
 
 	function preMint(uint256 numberOfTokens, address receiver) public onlyCreator {
-		require(!isSale, "The sale has started. Can't call preMintClone");
 		for (uint256 i = 0; i < numberOfTokens; i++) {
-			if (MimonContract.totalSupply() < MAX_MIMON_SUPPLY) {
+			if (MimonContract.totalSupply() < MAX_TOKEN_SUPPLY) {
 				MimonContract.mint(receiver);
 			}
 		}
@@ -91,10 +96,10 @@ contract MimonSale is Context {
 
 	function withdraw() public payable onlyCreator {
 		uint256 contractBalance = address(this).balance;
-		uint256 percentage = contractBalance / 100;
+		uint256 percentage = contractBalance.div(100);
 
-		require(payable(C1).send(percentage * 90));
-		require(payable(C2).send(percentage * 10));
+		require(payable(C1).send(percentage.mul(90)));
+		require(payable(C2).send(percentage.mul(10)));
 	}
 
 	function setC1(address changeAddress) public onlyC1 {
@@ -105,7 +110,11 @@ contract MimonSale is Context {
 		C2 = changeAddress;
 	}
 
-	function setSale() public onlyCreator {
-		isSale = !isSale;
+	function setPreSale() public onlyCreator {
+		isPreSale = !isPreSale;
+	}
+
+	function setPublicSale() public onlyCreator {
+		isPublicSale = !isPublicSale;
 	}
 }
