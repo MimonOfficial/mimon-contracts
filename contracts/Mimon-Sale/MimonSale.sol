@@ -39,7 +39,7 @@ contract MimonSale is Context {
 		require(isPublicSale, "The sale has not started.");
 		require(MimonContract.totalSupply() < MAX_TOKEN_SUPPLY, "Sale has already ended.");
 		require(MimonContract.totalSupply().add(numberOfTokens) <= MAX_TOKEN_SUPPLY, "Purchase would exceed max supply of Mimon");
-		require(numberOfTokens <= MAX_PUBLICSALE_AMOUNT, "Can only mint 3 Mimon at a time");
+		require(numberOfTokens <= MAX_PUBLICSALE_AMOUNT, "Can only mint 15 Mimon at a time");
 		require(PUBLICSALE_PRICE.mul(numberOfTokens) <= msg.value, "Eth value sent is not correct");
 		_;
 	}
