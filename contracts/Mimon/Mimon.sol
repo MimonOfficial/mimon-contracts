@@ -32,10 +32,11 @@ contract Mimon is Context, ERC721, ERC721Enumerable, AccessControlEnumerable, Ow
 		_;
 	}
 
-	constructor(string memory baseTokenURI, address _proxyAddress) ERC721(TOKEN_NAME, TOKEN_SYMBOL) {
+	constructor(string memory baseTokenURI, address proxy, address dev) ERC721(TOKEN_NAME, TOKEN_SYMBOL) {
 		_baseTokenURI = baseTokenURI;
 		_tokenIdTracker.increment();
-		proxyAddress = address(_proxyAddress);
+		proxyAddress = address(proxy);
+		setDevAddress(dev);
 	}
 
 	function mint(address to) external virtual onlyMinter {
