@@ -18,8 +18,7 @@ contract Mimon is Context, ERC721, ERC721Enumerable, AccessControlEnumerable, Ow
 	string private _baseTokenURI;
 	address public minterContract;
 	address public devAddress;
-	address public lotusContract;
-	address public openseaContract;
+	address public proxyAddress;
 
 	Counters.Counter private _tokenIdTracker;
 
@@ -33,8 +32,10 @@ contract Mimon is Context, ERC721, ERC721Enumerable, AccessControlEnumerable, Ow
 		_;
 	}
 
-	constructor(string memory baseTokenURI) ERC721(TOKEN_NAME, TOKEN_SYMBOL) {
+	constructor(string memory baseTokenURI, address _proxyAddress) ERC721(TOKEN_NAME, TOKEN_SYMBOL) {
 		_baseTokenURI = baseTokenURI;
+		_tokenIdTracker.increment();
+		proxyAddress = address(_proxyAddress);
 	}
 
 	function mint(address to) external virtual onlyMinter {
@@ -48,34 +49,26 @@ contract Mimon is Context, ERC721, ERC721Enumerable, AccessControlEnumerable, Ow
 		address to,
 		uint256[] memory _myTokensId
 	) public {
-		require(_myTokensId.length <= 100, "Can only transfer 100 Clones at a time");
+		require(_myTokensId.length <= 100, "Can only transfer 100 Mimons at a time");
 		for (uint256 i = 0; i < _myTokensId.length; i++) {
 			transferFrom(from, to, _myTokensId[i]);
 		}
-	}
-
-	function setMinterContract(address saleContract) public onlyDev {
-		minterContract = saleContract;
 	}
 
 	function setBaseURI(string memory baseURI) public onlyDev {
 		_baseTokenURI = baseURI;
 	}
 
-	function getBaseURI() public view returns (string memory) {
-		return _baseURI();
+	function setMinterContract(address saleContract) public onlyDev {
+		minterContract = saleContract;
+	}
+
+	function setProxyContract(address _proxyAddress) public onlyDev {
+		proxyAddress = address(_proxyAddress);
 	}
 
 	function setDevAddress(address _devAddress) public onlyOwner {
 		devAddress = _devAddress;
-	}
-
-	function setLotusContract(address _lotus) public onlyDev {
-		lotusContract = address(_lotus);
-	}
-
-	function setOpenseaContract(address _opensea) public onlyDev {
-		openseaContract = address(_opensea);
 	}
 
 	/**
@@ -83,7 +76,7 @@ contract Mimon is Context, ERC721, ERC721Enumerable, AccessControlEnumerable, Ow
 	 */
 	function isApprovedForAll(address _owner, address _operator) public view override returns (bool isOperator) {
 		// if OpenSea's ERC721 Proxy Address is detected, auto-return true
-		if (_operator == openseaContract) {
+		if (proxyAddress == _operator) {
 			return true;
 		}
 		return ERC721.isApprovedForAll(_owner, _operator);
@@ -91,6 +84,10 @@ contract Mimon is Context, ERC721, ERC721Enumerable, AccessControlEnumerable, Ow
 
 	function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControlEnumerable, ERC721, ERC721Enumerable) returns (bool) {
 		return super.supportsInterface(interfaceId);
+	}
+
+	function getBaseURI() public view returns (string memory) {
+		return _baseURI();
 	}
 
 	function _baseURI() internal view virtual override returns (string memory) {
