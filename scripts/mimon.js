@@ -7,7 +7,7 @@ async function main() {
 
   const Mimon = await hre.ethers.getContractFactory('Mimon')
 
-  const mimon = await Mimon.deploy(baseURI, openseaProxyContract, devAddress)
+  const mimon = await Mimon.deploy(baseURI, devAddress, openseaProxyContract)
   await mimon.deployed()
 
   console.log('Mimon deployed to:', mimon.address)

@@ -7,11 +7,11 @@ module.exports = {
   networks: {
     popcateum: {
       url: 'https://dataseed.popcateum.org',
-      accounts: [process.env.PK || ''],
+      accounts: [process.env.TestPK || ''],
     },
     polygon: {
       url: 'https://polygon-rpc.com',
-      accounts: [process.env.PK || ''],
+      accounts: [process.env.TestPK || ''],
       gas: 35,
     },
     gorli: {

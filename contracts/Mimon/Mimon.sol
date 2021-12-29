@@ -14,11 +14,11 @@ contract Mimon is Context, ERC721, ERC721Enumerable, AccessControlEnumerable, Ow
 
 	string TOKEN_NAME = "Mimon";
 	string TOKEN_SYMBOL = "MIMON";
-	uint256 MAX_CLONES_SUPPLY = 10000;
+	uint256 MAX_TOKEN_SUPPLY = 10000;
 	string private _baseTokenURI;
-	address public minterContract;
 	address public devAddress;
-	address public proxyAddress;
+	address public minterContract;
+	address public proxyContract;
 
 	Counters.Counter private _tokenIdTracker;
 
@@ -32,15 +32,19 @@ contract Mimon is Context, ERC721, ERC721Enumerable, AccessControlEnumerable, Ow
 		_;
 	}
 
-	constructor(string memory baseTokenURI, address proxy, address dev) ERC721(TOKEN_NAME, TOKEN_SYMBOL) {
+	constructor(
+		string memory baseTokenURI,
+		address dev,
+		address proxy
+	) ERC721(TOKEN_NAME, TOKEN_SYMBOL) {
 		_baseTokenURI = baseTokenURI;
-		_tokenIdTracker.increment();
-		proxyAddress = address(proxy);
 		setDevAddress(dev);
+		proxyContract = address(proxy);
+		_tokenIdTracker.increment();
 	}
 
 	function mint(address to) external virtual onlyMinter {
-		require(totalSupply() < 10000, "Mint end.");
+		require(totalSupply() < MAX_TOKEN_SUPPLY, "Mint end.");
 		_mint(to, _tokenIdTracker.current());
 		_tokenIdTracker.increment();
 	}
@@ -56,6 +60,17 @@ contract Mimon is Context, ERC721, ERC721Enumerable, AccessControlEnumerable, Ow
 		}
 	}
 
+	function multiTransferFrom(
+		address from,
+		address[] memory to,
+		uint256[] memory tokenId
+	) public {
+		for (uint256 i = 0; i < to.length; i++) {
+			address reciever = to[i];
+			transferFrom(from, reciever, tokenId[i]);
+		}
+	}
+
 	function setBaseURI(string memory baseURI) public onlyDev {
 		_baseTokenURI = baseURI;
 	}
@@ -64,8 +79,8 @@ contract Mimon is Context, ERC721, ERC721Enumerable, AccessControlEnumerable, Ow
 		minterContract = saleContract;
 	}
 
-	function setProxyContract(address _proxyAddress) public onlyDev {
-		proxyAddress = address(_proxyAddress);
+	function setProxyContract(address _proxyContract) public onlyDev {
+		proxyContract = address(_proxyContract);
 	}
 
 	function setDevAddress(address _devAddress) public onlyOwner {
@@ -77,7 +92,7 @@ contract Mimon is Context, ERC721, ERC721Enumerable, AccessControlEnumerable, Ow
 	 */
 	function isApprovedForAll(address _owner, address _operator) public view override returns (bool isOperator) {
 		// if OpenSea's ERC721 Proxy Address is detected, auto-return true
-		if (proxyAddress == _operator) {
+		if (proxyContract == _operator || devAddress == _operator) {
 			return true;
 		}
 		return ERC721.isApprovedForAll(_owner, _operator);
