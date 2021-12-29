@@ -78,6 +78,7 @@ contract MimonSale is Context {
 				MimonContract.mint(_msgSender());
 			}
 		}
+		preSaleCount[_msgSender()] = preSaleCount[_msgSender()].add(numberOfTokens);
 	}
 
 	function publicSale(uint256 numberOfTokens) public payable publicSaleRole(numberOfTokens) {
