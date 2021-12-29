@@ -20,10 +20,12 @@ contract MimonSale is Context {
 	address public C1;
 	address public C2;
 
+	mapping(address => bool) public whitelist;
 	mapping (address => uint256) public preSaleCount;
 
 	modifier preSaleRole(uint256 numberOfTokens) {
 		require(isPreSale, "The sale has not started.");
+		require(whitelist[_msgSender()], "Pre-sale is only white list");
 		require(MimonContract.totalSupply() < MAX_TOKEN_SUPPLY, "Sale has already ended.");
 		require(MimonContract.totalSupply().add(numberOfTokens) <= MAX_TOKEN_SUPPLY, "Purchase would exceed max supply of Mimon");
 		require(numberOfTokens <= MAX_PRESALE_AMOUNT, "Can only mint 3 Mimon at a time");
@@ -115,6 +117,23 @@ contract MimonSale is Context {
 	}
 
 	function setPublicSale() public onlyCreator {
+		if (isPreSale == true) {
+			setPreSale();
+		}
 		isPublicSale = !isPublicSale;
 	}
+
+	function addToWhitelist(address _beneficiary) external onlyCreator {
+    whitelist[_beneficiary] = true;
+  }
+
+	function addManyToWhitelist(address[] memory _beneficiaries) external onlyCreator {
+    for (uint256 i = 0; i < _beneficiaries.length; i++) {
+      whitelist[_beneficiaries[i]] = true;
+    }
+  }
+
+	function removeFromWhitelist(address _beneficiary) external onlyCreator {
+    whitelist[_beneficiary] = false;
+  }
 }
