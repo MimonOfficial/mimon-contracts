@@ -10,10 +10,10 @@ contract MimonSale is Context {
 	using SafeMath for uint256;
 
 	IMimon public MimonContract;
-	uint256 PRESALE_PRICE = 40000000000000000; // 0.04 Eth
-	uint256 PUBLICSALE_PRICE = 60000000000000000; // 0.06 Eth
-	uint256 MAX_TOKEN_SUPPLY = 10000;
-	uint256 MAX_PRESALE_SUPPLY = 2000;
+	uint256 public PRESALE_PRICE = 40000000000000000; // 0.04 Eth
+	uint256 public publicSalePrice;
+	uint256 public MAX_TOKEN_SUPPLY = 10000;
+	uint256 public MAX_PRESALE_SUPPLY = 2000;
 	uint256 public constant MAX_PRESALE_AMOUNT = 3;
 	uint256 public constant MAX_PUBLICSALE_AMOUNT = 15;
 	bool public isPreSale = false;
@@ -21,7 +21,7 @@ contract MimonSale is Context {
 	address public C1;
 	address public C2;
 
-	mapping (address => uint256) public preSaleCount;
+	mapping(address => uint256) public preSaleCount;
 
 	modifier preSaleRole(uint256 numberOfTokens) {
 		require(isPreSale, "The sale has not started.");
@@ -39,7 +39,7 @@ contract MimonSale is Context {
 		require(MimonContract.totalSupply() < MAX_TOKEN_SUPPLY, "Sale has already ended.");
 		require(MimonContract.totalSupply().add(numberOfTokens) <= MAX_TOKEN_SUPPLY, "Purchase would exceed max supply of Mimon");
 		require(numberOfTokens <= MAX_PUBLICSALE_AMOUNT, "Can only mint 15 Mimon at a time");
-		require(PUBLICSALE_PRICE.mul(numberOfTokens) <= msg.value, "Eth value sent is not correct");
+		require(publicSalePrice.mul(numberOfTokens) <= msg.value, "Eth value sent is not correct");
 		_;
 	}
 
@@ -69,6 +69,7 @@ contract MimonSale is Context {
 		MimonContract = IMimon(_mimonCA);
 		C1 = _C1;
 		C2 = _C2;
+		setPublicSalePrice(60000000000000000); // 0.06 Eth
 	}
 
 	function preSale(uint256 numberOfTokens) public payable preSaleRole(numberOfTokens) {
@@ -121,5 +122,9 @@ contract MimonSale is Context {
 			setPreSale();
 		}
 		isPublicSale = !isPublicSale;
+	}
+
+	function setPublicSalePrice(uint256 price) public onlyCreator {
+		publicSalePrice = price;
 	}
 }
