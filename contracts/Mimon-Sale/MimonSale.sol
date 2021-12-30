@@ -12,8 +12,7 @@ contract MimonSale is Context {
 	IMimon public MimonContract;
 	uint256 public constant PRESALE_PRICE = 40000000000000000; // 0.04 Eth
 	uint256 public publicSalePrice;
-	uint256 public constant MAX_PRESALE_SUPPLY = 1700;
-	uint256 public constant MAX_PRESALE_WHITELIST_SUPPLY = 2000;
+	uint256 public constant MAX_PRESALE_SUPPLY = 2000;
 	uint256 public constant MAX_TOKEN_SUPPLY = 10000;
 	uint256 public constant MAX_PRESALE_AMOUNT = 3;
 	uint256 public constant MAX_PUBLICSALE_AMOUNT = 15;
@@ -29,18 +28,6 @@ contract MimonSale is Context {
 		require(isPreSale, "The sale has not started.");
 		require(MimonContract.totalSupply() < MAX_PRESALE_SUPPLY, "Pre-sale has already ended.");
 		require(MimonContract.totalSupply().add(numberOfTokens) <= MAX_PRESALE_SUPPLY, "Pre-sale would exceed max supply of Mimon");
-		require(numberOfTokens <= MAX_PRESALE_AMOUNT, "Can only mint 3 Mimon at a time");
-		require(preSaleCount[_msgSender()] < MAX_PRESALE_AMOUNT, "Pre-sale max mint amount is 3");
-		require(preSaleCount[_msgSender()].add(numberOfTokens) <= MAX_PRESALE_AMOUNT, "Pre-sale max mint amount is 3");
-		require(PRESALE_PRICE.mul(numberOfTokens) <= msg.value, "Eth value sent is not correct");
-		_;
-	}
-
-	modifier preSaleWhitelistRole(uint256 numberOfTokens) {
-		require(isPreSale, "The sale has not started.");
-		require(whitelist[_msgSender()], "It's not registered on the white list.");
-		require(MimonContract.totalSupply() < MAX_PRESALE_WHITELIST_SUPPLY, "Pre-sale has already ended.");
-		require(MimonContract.totalSupply().add(numberOfTokens) <= MAX_PRESALE_WHITELIST_SUPPLY, "Pre-sale would exceed max supply of Mimon");
 		require(numberOfTokens <= MAX_PRESALE_AMOUNT, "Can only mint 3 Mimon at a time");
 		require(preSaleCount[_msgSender()] < MAX_PRESALE_AMOUNT, "Pre-sale max mint amount is 3");
 		require(preSaleCount[_msgSender()].add(numberOfTokens) <= MAX_PRESALE_AMOUNT, "Pre-sale max mint amount is 3");
@@ -89,15 +76,6 @@ contract MimonSale is Context {
 	function preSale(uint256 numberOfTokens) public payable preSaleRole(numberOfTokens) {
 		for (uint256 i = 0; i < numberOfTokens; i++) {
 			if (MimonContract.totalSupply() < MAX_PRESALE_SUPPLY) {
-				MimonContract.mint(_msgSender());
-			}
-		}
-		preSaleCount[_msgSender()] = preSaleCount[_msgSender()].add(numberOfTokens);
-	}
-
-	function preSaleForWhitelist(uint256 numberOfTokens) public payable preSaleWhitelistRole(numberOfTokens) {
-		for (uint256 i = 0; i < numberOfTokens; i++) {
-			if (MimonContract.totalSupply() < MAX_PRESALE_WHITELIST_SUPPLY) {
 				MimonContract.mint(_msgSender());
 			}
 		}
