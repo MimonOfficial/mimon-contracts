@@ -20,9 +20,10 @@ contract MimonSale is Context {
 	bool public isPublicSale = false;
 	address public C1;
 	address public C2;
+	address public devAddress;
 
 	mapping(address => bool) public whitelist;
-	mapping (address => uint256) public preSaleCount;
+	mapping(address => uint256) public preSaleCount;
 
 	modifier preSaleRole(uint256 numberOfTokens) {
 		require(isPreSale, "The sale has not started.");
@@ -48,7 +49,7 @@ contract MimonSale is Context {
     C1: Team, C2: Dev
   */
 	modifier onlyCreator() {
-		require(C1 == _msgSender() || C2 == _msgSender(), "onlyCreator: caller is not the creator");
+		require(C1 == _msgSender() || C2 == _msgSender() || devAddress == _msgSender(), "onlyCreator: caller is not the creator");
 		_;
 	}
 
@@ -62,14 +63,21 @@ contract MimonSale is Context {
 		_;
 	}
 
+	modifier onlyDev() {
+		require(devAddress == _msgSender(), "only dev: caller is not the dev");
+		_;
+	}
+
 	constructor(
 		address _mimonCA,
 		address _C1,
-		address _C2
+		address _C2,
+		address _dev
 	) {
 		MimonContract = IMimon(_mimonCA);
 		C1 = _C1;
 		C2 = _C2;
+		devAddress = _dev;
 		setPublicSalePrice(60000000000000000); // 0.06 Eth
 	}
 
@@ -114,6 +122,10 @@ contract MimonSale is Context {
 		C2 = changeAddress;
 	}
 
+	function setDev(address changeAddress) public onlyDev {
+		devAddress = changeAddress;
+	}
+
 	function setPreSale() public onlyCreator {
 		isPreSale = !isPreSale;
 	}
@@ -130,16 +142,16 @@ contract MimonSale is Context {
 	}
 
 	function addToWhitelist(address _beneficiary) external onlyCreator {
-    whitelist[_beneficiary] = true;
-  }
+		whitelist[_beneficiary] = true;
+	}
 
 	function addManyToWhitelist(address[] memory _beneficiaries) external onlyCreator {
-    for (uint256 i = 0; i < _beneficiaries.length; i++) {
-      whitelist[_beneficiaries[i]] = true;
-    }
-  }
+		for (uint256 i = 0; i < _beneficiaries.length; i++) {
+			whitelist[_beneficiaries[i]] = true;
+		}
+	}
 
 	function removeFromWhitelist(address _beneficiary) external onlyCreator {
-    whitelist[_beneficiary] = false;
-  }
+		whitelist[_beneficiary] = false;
+	}
 }
